@@ -6,6 +6,7 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 
+import static com.forex.UtilTest.getPathFromFile;
 import static org.junit.Assert.*;
 
 public class TradeServiceTest {
@@ -13,10 +14,18 @@ public class TradeServiceTest {
     private TradeService service = new TradeService();
 
     @Test
-    public void testTrade() throws IOException {
+    public void testTradeWithoutFee() throws IOException {
         Amount expectedAmount = new Amount("HKD", 8736.00);
         String path = getPathFromFile("tradeFile.txt");
         Amount actualAmount = service.trade(path);
+        assertEquals(expectedAmount, actualAmount);
+    }
+
+    @Test
+    public void testTradeWithFee() throws IOException {
+        Amount expectedAmount = new Amount("HKD", 7862.40);
+        String path = getPathFromFile("tradeFile.txt");
+        Amount actualAmount = service.trade(path, 0.1);
         assertEquals(expectedAmount, actualAmount);
     }
 
@@ -29,14 +38,19 @@ public class TradeServiceTest {
 
     @Test(expected = RuntimeException.class)
     public void testInvalidOperation() throws IOException {
-        Amount expectedAmount = new Amount("BRL", 1.00);
         String path = getPathFromFile("invalidTradeFile.txt");
         service.trade(path);
     }
 
-    private String getPathFromFile(String fileName) {
-        ClassLoader classLoader = getClass().getClassLoader();
-        File file = new File(classLoader.getResource(fileName).getFile());
-        return file.getPath();
+    @Test(expected = RuntimeException.class)
+    public void testInvalidFeeHighValue() throws IOException {
+        String path = getPathFromFile("tradeFile.txt");
+        service.trade(path,1.01);
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testInvalidFeeLowValue() throws IOException {
+        String path = getPathFromFile("tradeFile.txt");
+        service.trade(path,-0.01);
     }
 }

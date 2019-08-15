@@ -9,15 +9,15 @@ import java.util.Objects;
  */
 public class Amount {
     private final String currency;
-    private final BigDecimal amount;
+    private final BigDecimal amountValue;
 
-    public Amount(String currency, double amount) {
+    public Amount(String currency, double amountValue) {
         this.currency = currency;
-        this.amount = BigDecimal.valueOf(amount).setScale(2, RoundingMode.HALF_UP);
+        this.amountValue = BigDecimal.valueOf(amountValue).setScale(2, RoundingMode.HALF_UP);
     }
 
-    public double getAmount() {
-        return amount.doubleValue();
+    public double getAmountValue() {
+        return amountValue.doubleValue();
     }
 
     public String getCurrency() {
@@ -27,7 +27,7 @@ public class Amount {
     @Override
     public String toString() {
         return "# Traded Amount\n" +
-                currency + " " + amount.doubleValue();
+                currency + " " + amountValue.doubleValue();
     }
 
     @Override
@@ -36,11 +36,11 @@ public class Amount {
         if (o == null || getClass() != o.getClass()) return false;
         Amount amount1 = (Amount) o;
         return Objects.equals(currency, amount1.currency) &&
-                Objects.equals(amount, amount1.amount);
+                Objects.equals(amountValue, amount1.amountValue);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(currency, amount);
+        return Objects.hash(currency, amountValue);
     }
 }

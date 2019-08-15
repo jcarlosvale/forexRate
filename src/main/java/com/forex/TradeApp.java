@@ -10,5 +10,6 @@ public class TradeApp {
         String filePath = args[0];
         TradeService tradeService = new TradeService();
         System.out.println(tradeService.trade(filePath));
+        System.out.println(tradeService.trade(filePath,0.01));
     }
 }

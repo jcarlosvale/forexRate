@@ -3,89 +3,71 @@ package com.forex.service;
 import com.forex.domain.Amount;
 import com.forex.domain.ConversionPair;
 import com.forex.domain.ForexRate;
+import com.forex.domain.ForexFileInformation;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * Main class to process the operations and conversions from Forex File
+ */
 public class TradeService {
 
+    /**
+     * Part 1 of Challenge: without fee to calculate
+     * @param filePath file path
+     * @return the Amount after calculation, applying the operations over the initial amount and using the Forex rates
+     * @throws IOException in case of File read error operations
+     */
     public Amount trade(String filePath) throws IOException {
-        List<String> linesFromFile = removeComments(Files.readAllLines(Paths.get(filePath)));
-        int indexRead = 0;
-        int ratesQty = Integer.parseInt(linesFromFile.get(0));
-        indexRead++;
-        List<ForexRate> listForexRates = retrieveForexRates(linesFromFile, 1, ratesQty);
-        indexRead = indexRead + ratesQty;
-        Amount amount = readAmountFrom(linesFromFile.get(indexRead));
-        indexRead++;
-        int tradesQty = Integer.parseInt(linesFromFile.get(indexRead));
-        indexRead++;
-        List<String> operations = retrieveTradingOperations(linesFromFile, indexRead, tradesQty);
-        return processTrading(amount, operations, listForexRates);
+        ForexFileInformation forexFileInformation = ForexFileInformation.parse(filePath);
+        return processTrading(forexFileInformation, 0);
     }
 
-    private Amount processTrading(Amount amount, List<String> operations, List<ForexRate> listForexRates) {
-        Map<ConversionPair, ForexRate> mapForexRates = listForexRates.stream().collect(Collectors
-                .toMap(forexRate -> new ConversionPair(forexRate.getFromCcy(), forexRate.getToCcy()), Function.identity()));
+    /**
+     * Part 2 of Challenge: with fee to calculate
+     * @param filePath file path
+     * @param fee fee to be applied in the conversions
+     * @return the Amount after calculation, applying the operations over the initial amount and using the Forex rates
+     * @throws IOException in case of File read error operations
+     */
+    public Amount trade(String filePath, double fee) throws IOException {
+        ForexFileInformation forexFileInformation = ForexFileInformation.parse(filePath);
+        return processTrading(forexFileInformation, fee);
+    }
+
+    /**
+     * Main calculation method.
+     * First is created a Map of Conversion Pair and the Forex Rates to be used in locate the conversion to be applied
+     * Second for each operation, it's located your conversion rate and updated the rate to be applied in the end
+     * Third, using the accumulated rate, it's done the calculation over the initial amount and applied the fee
+     * @param forexFileInformation the file informations
+     * @param fee fee to be applied
+     * @return the final amount after the calculations or operations
+     */
+    private Amount processTrading(ForexFileInformation forexFileInformation, double fee) {
+        if (fee < 0 || fee > 1) {
+            throw new RuntimeException("Forex fee invalid: " + fee);
+        }
+
+        Map<ConversionPair, ForexRate> mapForexRates = forexFileInformation.getForexRates().stream().collect(Collectors
+                .toMap(ForexRate::getConversionPair, Function.identity()));
 
         double rate = 1;
-        String currentCurrency = amount.getCurrency();
+        String lastOperation = forexFileInformation.getInitialAmount().getCurrency();
 
-        for(String operation: operations) {
-            ForexRate forexRate = mapForexRates.get(new ConversionPair(currentCurrency, operation));
+        for(String operation: forexFileInformation.getOperations()) {
+            ForexRate forexRate = mapForexRates.get(new ConversionPair(lastOperation, operation));
             if (null == forexRate) {
-                throw new RuntimeException("Forex Rate doesn´t exist: " + currentCurrency +  " --> " + operation);
+                throw new RuntimeException("Forex Rate doesn't exist: " + lastOperation +  " --> " + operation);
             }
             rate = rate * forexRate.getRate();
-            currentCurrency = operation;
+            lastOperation = operation;
         }
 
-        String lastOperation = operations.get(operations.size() - 1);
-        double value = rate * amount.getAmount();
+        double value = rate * forexFileInformation.getInitialAmount().getAmountValue() * (1-fee);
         return new Amount(lastOperation, value);
     }
-
-    private List<String> retrieveTradingOperations(List<String> linesFromFile, int indexRead, int tradesQty) {
-        List<String> operations = new ArrayList<>();
-        int index = indexRead;
-        while (tradesQty > 0) {
-            operations.add(linesFromFile.get(index));
-            index++;
-            tradesQty--;
-        }
-        return operations;
-    }
-
-    private Amount readAmountFrom(String line) {
-        String [] values = line.split(" ");
-        String currency = values[0];
-        double amount = Double.parseDouble(values[1]);
-        return new Amount(currency, amount);
-    }
-
-    private List<ForexRate> retrieveForexRates(List<String> linesFromFile, int startIndex, int ratesQty) {
-        List<ForexRate> listForexRates = new ArrayList<>();
-        while (ratesQty > 0) {
-            String[] values = linesFromFile.get(startIndex).split(" ");
-            String fromCcy = values[0];
-            String toCcy = values[1];
-            double rate = Double.parseDouble(values[2]);
-            listForexRates.add(new ForexRate(fromCcy, toCcy, rate));
-            ratesQty--;
-            startIndex++;
-        }
-        return listForexRates;
-    }
-
-    private List<String> removeComments(List<String> linesFromFile) {
-        return linesFromFile.stream().filter(line -> !line.trim().startsWith("#")).collect(Collectors.toList());
-    }
-
 }

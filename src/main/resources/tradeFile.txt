@@ -1,0 +1,13 @@
+# Rates
+4
+EUR GBP 0.80
+GBP EUR 1.20
+GBP USD 1.40
+USD HKD 7.80
+# Initial Amount
+EUR 1000
+# TRADES
+3
+GBP
+USD
+HKD
