@@ -27,7 +27,7 @@ public class Amount {
     @Override
     public String toString() {
         return "# Traded Amount\n" +
-                currency + " " + amountValue.doubleValue();
+                currency + " " + amountValue;
     }
 
     @Override
