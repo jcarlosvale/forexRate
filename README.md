@@ -18,7 +18,7 @@ File:
   
 Run:
 
-    java -jar target/ tradeApp-0.0.1.jar tradeFile.txt
+    java -jar target/tradeApp-0.0.1.jar tradeFile.txt
 
 Input file:
 
