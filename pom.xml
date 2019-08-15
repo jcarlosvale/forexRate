@@ -31,7 +31,7 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
         <configuration>
-          <mainClass>com.dragonsofmugloar.DragonsOfMugloarApp</mainClass>
+          <mainClass>com.forex.TradeApp</mainClass>
         </configuration>
         <executions>
           <execution>

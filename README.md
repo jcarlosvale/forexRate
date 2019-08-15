@@ -49,7 +49,7 @@ To generate JAR:
 
 To run:
 
-    java -jar target/ tradeApp-0.0.1.jar [file_path]
+    java -jar target/tradeApp-0.0.1.jar [file_path]
     
 To run tests:
 
